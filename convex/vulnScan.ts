@@ -512,38 +512,26 @@ export const notifySlack = internalAction({
     }
 
     lines.push("");
-    lines.push(`📊 <https://security-manager-0bf78f18.viktor.space|View all details in Security Manager dashboard>`);
+    const appUrl = process.env.APP_URL || "https://central.ystvps.com";
+    lines.push(`📊 <${appUrl}|View all details in Security Manager dashboard>`);
 
-    // Send via Viktor Tools
-    const apiUrl = process.env.VIKTOR_SPACES_API_URL;
-    const secret = process.env.VIKTOR_SPACES_PROJECT_SECRET;
-    const projectName = process.env.VIKTOR_SPACES_PROJECT_NAME;
+    // Send via a Slack incoming webhook (direct provider call — the Viktor
+    // Spaces "coworker_send_slack_message" tool gateway is gone). Fail closed:
+    // if neither the env var nor the settings key is set, no notification is sent.
+    const webhookUrl =
+      process.env.SLACK_WEBHOOK_URL ??
+      (await ctx.runQuery(internal.settings.getInternal, {
+        key: "slack_webhook_url",
+      }));
 
-    if (apiUrl && secret && projectName) {
+    if (webhookUrl) {
       try {
-        const resp = await fetch(`${apiUrl}/api/viktor-spaces/tools/call`, {
+        const resp = await fetch(webhookUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            project_name: projectName,
-            project_secret: secret,
-            role: "coworker_send_slack_message",
-            arguments: {
-              channel_id: "C0B0WHH2L8M", // #central-server-site-mgmt-dash
-              blocks: [
-                {
-                  type: "section",
-                  text: {
-                    type: "mrkdwn",
-                    text: lines.join("\n"),
-                  },
-                },
-              ],
-              do_send: true,
-            },
-          }),
+          body: JSON.stringify({ text: lines.join("\n") }),
         });
 
         if (!resp.ok) {
