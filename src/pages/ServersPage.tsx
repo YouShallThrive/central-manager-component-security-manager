@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const SERVER_MANAGEMENT_URL = import.meta.env.VITE_SERVER_MANAGEMENT_URL || "https://preview-server-management-8973432e.viktor.space";
+const SERVER_MANAGEMENT_URL = import.meta.env.VITE_SERVER_MANAGEMENT_URL || "https://central.ystvps.com";
 
 function AccountCard({ account }: { account: any }) {
   return (
