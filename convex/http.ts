@@ -18,7 +18,7 @@ http.route({
       const body = await request.json();
       const { serverManagementUrl, ssoSharedSecret, adminKey } = body;
 
-      const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+      const secret = process.env.SSO_SHARED_SECRET;
       if (!adminKey || adminKey !== secret) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 403,
@@ -70,7 +70,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+      const secret = process.env.SSO_SHARED_SECRET;
       if (!body.adminKey || body.adminKey !== secret) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 403,
@@ -125,7 +125,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+      const secret = process.env.SSO_SHARED_SECRET;
       if (!body.adminKey || body.adminKey !== secret) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 403,
@@ -176,7 +176,7 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     try {
       const body = await request.json();
-      const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+      const secret = process.env.SSO_SHARED_SECRET;
       if (!body.adminKey || body.adminKey !== secret) {
         return new Response(JSON.stringify({ error: "Unauthorized" }), {
           status: 403,
@@ -223,7 +223,7 @@ http.route({
   path: "/api/admin/recalc-scores",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    const secret = process.env.SSO_SHARED_SECRET || "66mTA4FYT1TTYfuD6FC7eDHLN15vZC7T3L6DLz3tqbk";
+    const secret = process.env.SSO_SHARED_SECRET;
     if (request.headers.get("Authorization") !== `Bearer ${secret}`) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403, headers: { "Content-Type": "application/json" } });
     }
