@@ -58,7 +58,11 @@ const schema = defineSchema({
   // Rocket.net hosting accounts (supports multiple)
   rocketAccounts: defineTable({
     label: v.string(),
-    apiToken: v.string(),
+    // Token-hygiene (prod parity): raw token internal-only; public rows carry
+    // hasToken + tokenPreview (matching the imported prod snapshot).
+    hasToken: v.boolean(),
+    tokenPreview: v.optional(v.string()),
+    apiToken: v.optional(v.string()),
     status: v.union(
       v.literal("connected"),
       v.literal("error"),
