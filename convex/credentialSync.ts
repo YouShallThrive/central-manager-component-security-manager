@@ -122,6 +122,8 @@ export const patchAccount = internalMutation({
     await ctx.db.patch(args.id, {
       label: args.label,
       apiToken: args.apiToken,
+      hasToken: !!args.apiToken,
+      tokenPreview: args.apiToken ? `…${args.apiToken.slice(-8)}` : undefined,
       status: "connected" as const,
       lastError: undefined,
     });
@@ -139,6 +141,8 @@ export const insertAccount = internalMutation({
     return await ctx.db.insert("rocketAccounts", {
       label: args.label,
       apiToken: args.apiToken,
+      hasToken: !!args.apiToken,
+      tokenPreview: args.apiToken ? `…${args.apiToken.slice(-8)}` : undefined,
       status: "connected" as const,
     });
   },
