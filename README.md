@@ -2,6 +2,8 @@
 
 A production-ready full-stack web app template.
 
+> **Deploy**: push-to-deploy is wired via GitHub Actions. `staging` branch → staging dashboard (staging-security-manager.ystvps.com), `main` branch → production (security-manager.ystvps.com). Push to `staging` to test; merge `staging` → `main` to roll to prod.
+
 > **Viktor Spaces projects**: Your project is already configured with Convex, auth, and email. Skip to [Adding New Variables](#adding-new-variables) if you need to add integrations.
 
 ## Stack
