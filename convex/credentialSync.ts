@@ -61,7 +61,12 @@ export const pullFromServerManagement = internalAction({
       }
 
       const data = (await resp.json()) as { credentials: Credential[] };
-      const remoteCredentials = data.credentials ?? [];
+      // Only Rocket.net credentials belong in rocketAccounts: a non-Rocket
+      // credential (e.g. Cloudways) 401s against api.rocket.net and stamps the
+      // whole sync run "error" after a completely successful scan.
+      const remoteCredentials = (data.credentials ?? []).filter(
+        (c) => c.provider === "rocket",
+      );
 
       // Get current local accounts
       const localAccounts = await ctx.runQuery(internal.rocketAccounts.listAll, {});
