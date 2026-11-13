@@ -80,6 +80,7 @@ const schema = defineSchema({
     domain: v.string(),
     rocketUrl: v.optional(v.string()),
     stagingSiteId: v.optional(v.number()), // Rocket.net id of this site's staging copy
+    stagingUrl: v.optional(v.string()), // hostname of the staging copy (…-staging.wpdns.site)
     phpVersion: v.optional(v.string()),
     phpCheckedAt: v.optional(v.number()),
     // Rocket.net presence — set by the PHP/settings probe. Records are NEVER
