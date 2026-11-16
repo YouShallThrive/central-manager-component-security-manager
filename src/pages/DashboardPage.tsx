@@ -28,6 +28,7 @@ import {
   ExternalLink,
   Loader2,
   Flame,
+  FlaskConical,
   Bug,
   HardDrive,
   KeyRound,
@@ -139,7 +140,30 @@ function SiteRow({
       <td className="py-3 px-4">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{site.domain}</span>
+            <a
+              href={`https://${site.domain}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              title="Visit live site"
+              className="font-medium text-sm hover:text-primary hover:underline transition-colors"
+            >
+              {site.domain}
+            </a>
+            {site.stagingUrl && (
+              <a
+                href={`https://${site.stagingUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                title="Open stage site"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FlaskConical className="size-3" />
+                Stage site
+                <ExternalLink className="size-3" />
+              </a>
+            )}
             <RocketStatusBadge
               status={site.rocketStatus}
               missingSince={site.rocketMissingSince}
