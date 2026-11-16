@@ -248,6 +248,22 @@ function stagingIdOf(site: Record<string, unknown>): number | null {
   return typeof id === "number" && id > 0 ? id : null;
 }
 
+// Staging copies are separate Rocket sites (e.g. "abc123-staging.wpdns.site")
+// only referenced by id; resolve the hostname once per site so the UI can link
+// the stage site.
+async function fetchStagingDomain(
+  token: string,
+  stagingId: number,
+): Promise<string | null> {
+  try {
+    const details = await fetchSiteDetails(token, stagingId);
+    const domain = details.domain;
+    return typeof domain === "string" && domain ? domain : null;
+  } catch {
+    return null;
+  }
+}
+
 // Token retrieval is done inline in doFullSync
 
 // ─── Progress Tracking ───────────────────────────────────────
@@ -589,12 +605,14 @@ async function doFullSync(
       try {
         const siteId = site.id as number;
         const domain = (site.domain as string) ?? "unknown";
+        const stagingId = stagingIdOf(site);
         const docId = await ctx.runMutation(internal.sites.upsert, {
           accountId: accountId as any,
           rocketSiteId: siteId,
           domain,
           rocketUrl: site.rocket_url as string | undefined,
-          stagingSiteId: stagingIdOf(site),
+          stagingSiteId: stagingId,
+          stagingUrl: stagingId ? await fetchStagingDomain(token, stagingId) : null,
         });
         siteIds.push({ docId, rocketSiteId: siteId, domain });
         sitesSynced++;
@@ -723,12 +741,16 @@ export const syncSitesOnly = action({
 
         for (const site of productionSites) {
           try {
+            const stagingId = stagingIdOf(site);
             await ctx.runMutation(internal.sites.upsert, {
               accountId: account._id as any,
               rocketSiteId: site.id as number,
               domain: (site.domain as string) ?? "unknown",
               rocketUrl: site.rocket_url as string | undefined,
-              stagingSiteId: stagingIdOf(site),
+              stagingSiteId: stagingId,
+              stagingUrl: stagingId
+                ? await fetchStagingDomain(account.apiToken, stagingId)
+                : null,
             });
             totalSynced++;
           } catch {

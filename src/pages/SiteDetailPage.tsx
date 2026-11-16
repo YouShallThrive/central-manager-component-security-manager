@@ -23,6 +23,7 @@ import {
   Lock,
   Plug,
   ExternalLink,
+  FlaskConical,
   Globe,
   Server,
 } from "lucide-react";
@@ -159,15 +160,25 @@ export default function SiteDetailPage() {
             <PhpVersionBadge version={site.phpVersion} checkedAt={site.phpCheckedAt} />
             <RocketStatusBadge status={site.rocketStatus} missingSince={site.rocketMissingSince} />
             {site.wpVersion && <span>WP {site.wpVersion}</span>}
-            {site.rocketUrl && (
+            <a
+              href={`https://control.rocket.net/sites/${site.rocketSiteId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 hover:text-foreground transition-colors"
+            >
+              <Server className="size-3" />
+              Rocket.net
+              <ExternalLink className="size-3" />
+            </a>
+            {site.stagingUrl && (
               <a
-                href={site.rocketUrl}
+                href={`https://${site.stagingUrl}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 hover:text-foreground transition-colors"
               >
-                <Server className="size-3" />
-                Rocket.net
+                <FlaskConical className="size-3" />
+                Stage site
                 <ExternalLink className="size-3" />
               </a>
             )}
