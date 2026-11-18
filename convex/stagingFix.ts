@@ -39,7 +39,13 @@ import {
   type QueryCtx,
   query,
 } from "./_generated/server";
-import { isVulnFix, orderActions, sectionOf } from "./fixSections";
+import {
+  isVulnFix,
+  itemDetail,
+  orderActions,
+  sectionOf,
+  statusLabel,
+} from "./fixSections";
 import { stagingFixAction, stagingFixStatus } from "./schema";
 import {
   assertStagingTarget,
@@ -350,22 +356,15 @@ export const saveItem = internalMutation({
       finishedAt: Date.now(),
     });
 
-    const summary = actions
-      .map(a => {
-        const why = a.reason ?? a.note;
-        const what =
-          a.kind === "update_theme"
-            ? `theme ${a.slug}`
-            : a.kind === "update_core"
-              ? "core"
-              : a.slug;
-        return `${what}: ${a.status}${why ? ` (${why})` : ""}`;
-      })
-      .join("; ");
+    const details = itemDetail(
+      `Staging ${item.stagingSiteId} of ${item.domain} — ${statusLabel(status)}`,
+      actions,
+      error,
+    );
     await ctx.db.insert("actionLogs", {
       siteId: item.siteId,
       action: "staging_fix",
-      details: `Staging ${item.stagingSiteId} of ${item.domain}: ${error ?? summary}`,
+      details,
       status: status === "done" ? "success" : "error",
     });
 

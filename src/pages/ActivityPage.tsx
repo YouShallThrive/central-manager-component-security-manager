@@ -1,7 +1,8 @@
 import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { Activity, AlertTriangle, CheckCircle2, Info } from "lucide-react";
+import ActivityDetail from "@/components/ActivityDetail";
 import { Badge } from "@/components/ui/badge";
-import { Activity, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { api } from "../../convex/_generated/api";
 
 export default function ActivityPage() {
   const logs = useQuery(api.actionLogs.list, { limit: 200 });
@@ -17,7 +18,9 @@ export default function ActivityPage() {
 
       <div className="rounded-lg border bg-card overflow-hidden">
         {logs === undefined ? (
-          <div className="p-8 text-center text-muted-foreground">Loading...</div>
+          <div className="p-8 text-center text-muted-foreground">
+            Loading...
+          </div>
         ) : logs.length === 0 ? (
           <div className="p-12 text-center">
             <Activity className="size-8 text-muted-foreground/30 mx-auto mb-2" />
@@ -25,7 +28,7 @@ export default function ActivityPage() {
           </div>
         ) : (
           <div className="divide-y">
-            {logs.map((log) => (
+            {logs.map(log => (
               <div key={log._id} className="p-4 flex items-start gap-3">
                 <div className="mt-0.5">
                   {log.status === "success" && (
@@ -39,8 +42,8 @@ export default function ActivityPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm">{log.details}</p>
-                  <div className="flex items-center gap-2 mt-1">
+                  <ActivityDetail details={log.details} />
+                  <div className="flex items-center gap-2 mt-1.5">
                     <Badge variant="outline" className="text-xs">
                       {log.action}
                     </Badge>
