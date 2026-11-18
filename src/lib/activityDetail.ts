@@ -52,13 +52,25 @@ export function parseItem(text: string): DetailItem | undefined {
   };
 }
 
+/** Structured = a Fix-on-staging entry (multi-line, or the old flat
+ *  "Staging 248248 of domain: …" shape). Everything else is plain text. */
+const STAGING_RE = /^Staging (\d+) of ([^:\s]+):\s*([\s\S]*)$/;
+
+export function isStructuredDetails(details: string): boolean {
+  return details.includes("\n") || STAGING_RE.test(details);
+}
+
 /** Split a details string into display lines, recovering structure from the
- *  old single-line format when necessary. */
+ *  old single-line format when necessary. Unstructured text is returned as a
+ *  single line, untouched. */
 export function detailLines(details: string): string[] {
   if (details.includes("\n")) return details.split("\n");
 
-  const head = details.match(/^Staging (\d+) of ([^:\s]+):\s*([\s\S]*)$/);
-  const body = head ? head[3] : details;
-  const items = body.split(FLAT_SPLIT_RE).map(part => `    - ${part.trim()}`);
-  return head ? [`Staging ${head[1]} of ${head[2]}`, ...items] : items;
+  const head = details.match(STAGING_RE);
+  if (!head) return [details];
+
+  const items = head[3]
+    .split(FLAT_SPLIT_RE)
+    .map(part => `    - ${part.trim()}`);
+  return [`Staging ${head[1]} of ${head[2]}`, ...items];
 }
