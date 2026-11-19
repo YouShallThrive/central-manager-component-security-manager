@@ -1,12 +1,20 @@
 /**
  * Labels and the plain-text report for Fix on staging, grouped into the
  * sections from convex/fixSections.ts. Pure, so it can be tested directly.
+ *
+ * The per-action/status labels live in convex/fixSections.ts and are
+ * re-exported here, so the activity log (written server-side) and this report
+ * render a run the same way.
  */
 import {
-  fixesVuln,
+  actionLabel,
+  actionLine,
+  coversText,
   groupBySection,
-  isVulnFix,
   sectionSummary,
+  statusLabel,
+  targetVersion,
+  vulnText,
 } from "../../convex/fixSections";
 
 export type FixAction = {
@@ -39,55 +47,10 @@ export type ReportJob = {
   }[];
 };
 
-export const statusLabel = (status: string) => status.replace(/_/g, " ");
-
-/** Name shown inside a section (the section says what kind it is). */
-export const actionLabel = (a: FixAction) =>
-  a.kind === "activate_wordfence"
-    ? "Activate Wordfence"
-    : a.kind === "update_core"
-      ? "WordPress"
-      : (a.name ?? a.slug);
-
-/** Target version: what staging ended on, else what's offered (not for
- *  skipped items, which didn't move). */
-export const targetVersion = (a: FixAction) =>
-  a.toVersion ?? (a.status === "skipped" ? undefined : a.offered);
-
-export const coversText = (a: FixAction) =>
-  a.covers?.length ? `covers bundled ${a.covers.join(", ")}` : undefined;
-
-/** "fixes vulnerability, fixed in 11.1.0" and similar. */
-export function vulnText(a: FixAction): string | undefined {
-  if (!isVulnFix(a)) return undefined;
-  if (!fixesVuln(a))
-    return a.fixedIn ? `vulnerability fixed in ${a.fixedIn}` : undefined;
-  return a.fixedIn
-    ? `fixes vulnerability, fixed in ${a.fixedIn}`
-    : "open vulnerability, no fixed version released";
-}
+export { actionLabel, coversText, statusLabel, targetVersion, vulnText };
 
 const indent = (pad: string, label: string, text: string) =>
   `${pad}${label}: ${text.trim().split("\n").join(`\n${pad}  `)}`;
-
-function actionLine(a: FixAction): string {
-  const versions =
-    a.kind === "activate_wordfence"
-      ? ""
-      : [a.fromVersion, targetVersion(a)].filter(Boolean).join(" → ");
-  const extra = [
-    vulnText(a),
-    coversText(a),
-    a.prodVersion &&
-      a.fromVersion &&
-      a.prodVersion !== a.fromVersion &&
-      `live ${a.prodVersion}`,
-  ]
-    .filter(Boolean)
-    .join(", ");
-  const why = a.reason ?? a.note;
-  return `  - ${actionLabel(a)}${versions ? ` ${versions}` : ""}: ${statusLabel(a.status)}${extra ? ` (${extra})` : ""}${why ? ` — ${why}` : ""}`;
-}
 
 /** Plain-text report of a job, for pasting into Asana. */
 export function jobReport(job: ReportJob, when?: string): string {
@@ -108,7 +71,7 @@ export function jobReport(job: ReportJob, when?: string): string {
       const counts = sectionSummary(g, "run");
       lines.push(`  ${g.label}${counts ? ` (${counts})` : ""}`);
       for (const a of g.actions) {
-        lines.push(actionLine(a));
+        lines.push(`  ${actionLine(a)}`);
         if (a.detail) lines.push(indent("    ", "Detail", a.detail));
       }
     }

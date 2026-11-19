@@ -27,6 +27,13 @@ type ActionLike = {
   fixedIn?: string;
   vuln?: boolean;
   fromVersion?: string;
+  toVersion?: string;
+  prodVersion?: string;
+  offered?: string;
+  note?: string;
+  reason?: string;
+  detail?: string;
+  covers?: string[];
 };
 
 export const sectionOf = (kind: string): Section =>
@@ -113,4 +120,84 @@ export function sectionSummary<T extends ActionLike>(
     .filter(([c]) => (c as number) > 0)
     .map(([c, w]) => `${c} ${w}`)
     .join(", ");
+}
+
+// ---------------------------------------------------------------------------
+// Plain-text rendering, shared by the activity log (server) and the fix dialog
+// (client) so a run reads the same in both places.
+// ---------------------------------------------------------------------------
+
+export const statusLabel = (status: string) => status.replace(/_/g, " ");
+
+/** Name shown inside a section (the section says what kind it is). */
+export const actionLabel = <T extends ActionLike>(a: T) =>
+  a.kind === "activate_wordfence"
+    ? "Activate Wordfence"
+    : a.kind === "update_core"
+      ? "WordPress"
+      : (a.name ?? a.slug);
+
+/** Target version: what staging ended on, else what's offered (not for
+ *  skipped items, which didn't move). */
+export const targetVersion = <T extends ActionLike>(a: T) =>
+  a.toVersion ?? (a.status === "skipped" ? undefined : a.offered);
+
+export const coversText = <T extends ActionLike>(a: T) =>
+  a.covers?.length ? `covers bundled ${a.covers.join(", ")}` : undefined;
+
+/** "fixes vulnerability, fixed in 11.1.0" and similar. */
+export function vulnText<T extends ActionLike>(a: T): string | undefined {
+  if (!isVulnFix(a)) return undefined;
+  if (!fixesVuln(a))
+    return a.fixedIn ? `vulnerability fixed in ${a.fixedIn}` : undefined;
+  return a.fixedIn
+    ? `fixes vulnerability, fixed in ${a.fixedIn}`
+    : "open vulnerability, no fixed version released";
+}
+
+/** One action as `- name 1.2.3 → 1.3.0: done (fixes vulnerability… — reason)`. */
+export function actionLine<T extends ActionLike>(a: T): string {
+  const versions =
+    a.kind === "activate_wordfence"
+      ? ""
+      : [a.fromVersion, targetVersion(a)].filter(Boolean).join(" → ");
+  const extra = [
+    vulnText(a),
+    coversText(a),
+    a.prodVersion &&
+      a.fromVersion &&
+      a.prodVersion !== a.fromVersion &&
+      `live ${a.prodVersion}`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  const why = a.reason ?? a.note;
+  return `- ${actionLabel(a)}${versions ? ` ${versions}` : ""}: ${statusLabel(a.status)}${extra ? ` (${extra})` : ""}${why ? ` — ${why}` : ""}`;
+}
+
+/**
+ * Multi-line, sectioned summary of one site's run — the body of an activity
+ * log entry:
+ *
+ *   Staging 248248 of www.capehart.com — finished
+ *     Plugins (29 updated, 1 need check, 5 skipped)
+ *       - redux-framework: done
+ *       - sassy-social-share: skipped — Plugin was closed on wordpress.org
+ */
+export function itemDetail<T extends ActionLike>(
+  head: string,
+  actions: T[],
+  error?: string,
+): string {
+  const lines = [head];
+  if (error) lines.push(`  Error: ${error}`);
+  for (const g of groupBySection(actions)) {
+    const counts = sectionSummary(g, "run");
+    lines.push(`  ${g.label}${counts ? ` (${counts})` : ""}`);
+    for (const a of g.actions) {
+      lines.push(`    ${actionLine(a)}`);
+      if (a.detail) lines.push(`      Detail: ${a.detail.trim()}`);
+    }
+  }
+  return lines.join("\n");
 }
